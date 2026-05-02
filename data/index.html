@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>E-Ink Frame Control</title>
+    <style>
+      body {
+        font-family: sans-serif;
+        margin: 20px;
+      }
+      #preview {
+        border: 1px solid #333;
+        width: 800px;
+        height: 600px;
+        display: block;
+        margin-top: 10px;
+      }
+      form {
+        max-width: 800px;
+      }
+      .form-row {
+        margin-bottom: 8px;
+      }
+      label {
+        display: flex;
+        align-items: center;
+      }
+      label span {
+        margin-left: 4px;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>E-Ink Frame Control</h1>
+    <form id="frameForm">
+      <div class="form-row">
+        <label
+          >Image:
+          <input id="imageInput" type="file" accept="image/*" />
+        </label>
+      </div>
+      <div class="form-row">
+        <div
+          id="pasteTarget"
+          style="
+            border: 1px dashed #ccc;
+            padding: 10px;
+            text-align: center;
+            cursor: pointer;
+          "
+        >
+          Click here or paste your image
+        </div>
+      </div>
+      <div class="form-row">
+        <label>Auto Rotation: <span id="rotationLabel">0°</span></label>
+      </div>
+      <div class="form-row">
+        <label
+          >High Quality: <input type="checkbox" id="qualityCheckbox" checked
+        /></label>
+      </div>
+      <div class="form-row">
+        <label
+          >White fill: <input type="checkbox" id="whiteOutCheckbox" checked
+        /></label>
+      </div>
+      <div class="form-row">
+        <label>
+          Grayscale:
+          <select id="GrayscaleSelect" autocomplete="off">
+            <option value="no">Disabled</option>
+            <option value="conservative" selected>Grayscale</option>
+          </select>
+        </label>
+      </div>
+      <div class="form-row">
+        <label
+          >Contrast:
+          <input
+            type="range"
+            id="gammaSlider"
+            min="0.5"
+            max="2.0"
+            step="0.1"
+            value="1.0"
+        /></label>
+        <span id="gammaValue">1.0</span>
+      </div>
+      <div class="form-row">
+        <button type="submit">Upload & Draw</button>
+      </div>
+    </form>
+
+    <canvas id="preview" width="800" height="600"></canvas>
+
+    <script>
+      const MAX_SIZE = 10 * 1024 * 1024; // 2MB
+      const TARGET_W = 1872;
+      const TARGET_H = 1404;
+      const imageInput = document.getElementById("imageInput");
+      const preview = document.getElementById("preview");
+      const form = document.getElementById("frameForm");
+      const qualityCheckbox = document.getElementById("qualityCheckbox");
+      const whiteOutCheckbox = document.getElementById("whiteOutCheckbox");
+      const grayscaleOption = document.getElementById("GrayscaleSelect");
+      const gammaSlider = document.getElementById("gammaSlider");
+      const gammaValue = document.getElementById("gammaValue");
+      const rotationLabel = document.getElementById("rotationLabel");
+      const pasteTarget = document.getElementById("pasteTarget");
+      let imgData = null;
+      let autoRotation = 0;
+
+      function drawImageToCanvas(canvas, img, rotation, contrast, grayscale) {
+        const ctx = canvas.getContext("2d");
+        ctx.save();
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        ctx.filter = `contrast(${contrast})`;
+
+        if (grayscale === "conservative") {
+          ctx.filter += " grayscale(1)";
+        }
+
+        // calculate scaling ratio
+        let sw = img.width,
+          sh = img.height;
+        if (rotation) [sw, sh] = [sh, sw];
+        const ratio = Math.min(canvas.width / sw, canvas.height / sh);
+        const dw = sw * ratio,
+          dh = sh * ratio;
+
+        if (rotation) {
+          // rotate canvas 90° around center
+          ctx.translate(canvas.width / 2, canvas.height / 2);
+          ctx.rotate(rotation * (Math.PI / 2));
+          ctx.drawImage(img, -dh / 2, -dw / 2, dh, dw);
+        } else {
+          ctx.drawImage(
+            img,
+            (canvas.width - dw) / 2,
+            (canvas.height - dh) / 2,
+            dw,
+            dh
+          );
+        }
+        ctx.restore();
+      }
+
+      function updatePreview() {
+        if (!imgData) return;
+        drawImageToCanvas(
+          preview,
+          imgData,
+          autoRotation,
+          gammaSlider.value,
+          grayscaleOption.value
+        );
+      }
+
+      imageInput.addEventListener("change", () => {
+        const file = imageInput.files[0];
+        imgData = null;
+        if (!file) return;
+        if (file.size > MAX_SIZE) {
+          alert("File too large (>2MB)");
+          imageInput.value = "";
+          return;
+        }
+        const img = new Image();
+        img.onload = () => {
+          imgData = img;
+          autoRotation = img.height > img.width ? 3 : 0;
+          rotationLabel.textContent = `${autoRotation * 90}°`;
+          updatePreview();
+        };
+        img.src = URL.createObjectURL(file);
+      });
+
+      gammaSlider.addEventListener("input", () => {
+        gammaValue.textContent = gammaSlider.value;
+        updatePreview();
+      });
+
+      grayscaleOption.addEventListener("change", () => {
+        updatePreview();
+      });
+
+      form.addEventListener("submit", (e) => {
+        e.preventDefault();
+        if (!imgData) {
+          alert("Please select an image first");
+          return;
+        }
+
+        // Create an offscreen canvas for the target size
+        const off = document.createElement("canvas");
+        off.width = TARGET_W;
+        off.height = TARGET_H;
+
+        // Use drawImageToCanvas to draw the image with current settings
+        drawImageToCanvas(
+          off,
+          imgData,
+          autoRotation,
+          gammaSlider.value,
+          grayscaleOption.value
+        );
+
+        off.toBlob(async (blob) => {
+          const formData = new FormData();
+          formData.append(
+            "config",
+            JSON.stringify({
+              rotation: 0, // always 0 for the server
+              quality: qualityCheckbox.checked ? 1 : 0,
+              clearOut: whiteOutCheckbox.checked ? 1 : 0,
+              gamma: parseFloat(gammaSlider.value),
+              fileName: "frame.jpg",
+            })
+          );
+          formData.append("file", blob, "frame.jpg");
+          await fetch("/upload", { method: "POST", body: formData });
+          // alert("Uploaded and drawing");
+
+          // test: open the image in a new tab
+          const url = URL.createObjectURL(blob);
+          window.open(url, "_blank");
+        }, "image/jpeg");
+      });
+
+      pasteTarget.addEventListener("click", () => {
+        pasteTarget.focus(); // Focus the element to ensure paste works
+      });
+
+      pasteTarget.addEventListener("paste", (event) => {
+        event.preventDefault(); // Prevent default paste behavior
+        const items = (event.clipboardData || event.clipboardData).items;
+        let blob = null;
+        for (let i = 0; i < items.length; i++) {
+          if (items[i].type.indexOf("image") === 0) {
+            blob = items[i].getAsFile();
+            break;
+          }
+        }
+        if (blob) {
+          const img = new Image();
+          img.onload = () => {
+            imgData = img;
+            autoRotation = img.height > img.width ? 3 : 0;
+            rotationLabel.textContent = `${autoRotation * 90}°`;
+            updatePreview();
+            pasteTarget.textContent = "Image pasted!"; // Update text
+          };
+          img.src = URL.createObjectURL(blob);
+        }
+      });
+    </script>
+  </body>
+</html>
