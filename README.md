@@ -6,6 +6,13 @@ A web-based image display system for e-ink paper using ESP32.
 
 This project enables remote image display on e-ink screens connected to an ESP32 development board through a web interface. It leverages the LovyanGFX graphics library for optimal e-ink rendering.
 
+## Working photos
+
+<a href="assets/02_url_notice.jpg"><img src="assets/02_url_notice.jpg" alt="URL Notice" width="200" height="auto"></a>
+<a href="assets/03_web.png"><img src="assets/03_web.png" alt="Web" width="200" height="auto"></a>
+<a href="assets/04_result.jpg"><img src="assets/04_result.jpg" alt="Result" width="200" height="auto"></a>
+<a href="assets/05_wiring.jpg"><img src="assets/05_wiring.jpg" alt="Wiring" width="200" height="auto"></a>
+
 ## Features
 
 - Web interface for image upload and display
