@@ -33,7 +33,7 @@ This project enables remote image display on e-ink screens connected to an ESP32
 1. Clone or open this project in PlatformIO
 2. Install dependencies
 3. Configure your e-ink display model in the code
-4. Create `src/secret.h` folder including your Wi-Fi SSID and password (keep it secure!)
+4. Create `src/secret.h` file including your Wi-Fi SSID and password (keep it secure!)
 5. Build and upload to your ESP32
 
 ## Usage
