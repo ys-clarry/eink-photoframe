@@ -16,8 +16,10 @@ This project enables remote image display on e-ink screens connected to an ESP32
 
 ## Hardware Requirements
 
-- ESP32 Development Kit
-- Compatible e-ink display (specific model supported by LovyanGFX)
+- ESP32 Development Kit ([waveshare](https://docs.espressif.com/projects/esp-dev-kits/en/latest/esp32s3/esp32-s3-devkitc-1/index.html))
+- Compatible e-ink display (model supported by LovyanGFX)
+  - This code is hardly wired with 7.8-inch greyscale with IT8951 HAT ([waveshare](https://www.waveshare.com/7.8inch-e-paper-hat.htm))
+  - IT8951 is driven via SPI/GPIO. See code for pin assignment.
 - USB cable for programming and power
 
 ## Software Requirements
