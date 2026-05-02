@@ -1,4 +1,4 @@
-# eink-server-lovyan
+# eink-photoframe
 
 A web-based image display system for e-ink paper using ESP32 and LovyanGFX.
 
