@@ -1,6 +1,6 @@
 # eink-photoframe
 
-A web-based image display system for e-ink paper using ESP32 and LovyanGFX.
+A web-based image display system for e-ink paper using ESP32.
 
 ## Overview
 
@@ -9,7 +9,7 @@ This project enables remote image display on e-ink screens connected to an ESP32
 ## Features
 
 - Web interface for image upload and display
-- E-ink screen support via LovyanGFX library
+- E-ink screen support
 - ESP32-based server
 - Real-time image streaming to specific e-ink models
 - Responsive design
@@ -17,7 +17,7 @@ This project enables remote image display on e-ink screens connected to an ESP32
 ## Hardware Requirements
 
 - ESP32 Development Kit ([waveshare](https://docs.espressif.com/projects/esp-dev-kits/en/latest/esp32s3/esp32-s3-devkitc-1/index.html))
-- Compatible e-ink display (model supported by LovyanGFX)
+- Compatible e-ink display
   - This code is hardly wired with 7.8-inch greyscale with IT8951 HAT ([waveshare](https://www.waveshare.com/7.8inch-e-paper-hat.htm))
   - IT8951 is driven via SPI/GPIO. See code for pin assignment.
 - USB cable for programming and power
@@ -31,7 +31,7 @@ This project enables remote image display on e-ink screens connected to an ESP32
 ## Installation
 
 1. Clone or open this project in PlatformIO
-2. Install dependencies (LovyanGFX)
+2. Install dependencies
 3. Configure your e-ink display model in the code
 4. Build and upload to your ESP32
 
